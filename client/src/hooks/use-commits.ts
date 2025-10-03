@@ -10,5 +10,8 @@ export const useCommits = (projectId: string) => {
             if (!res.ok) throw new Error("Failed to fetch commits");
             return res.json();
         },
-        enabled: !!projectId,  });
+        enabled: !!projectId,
+        refetchOnWindowFocus: false
+    });
+    
 };

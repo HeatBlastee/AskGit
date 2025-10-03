@@ -59,5 +59,6 @@ export function useGetAnswers(projectId: string) {
             return res.json();
         },
         enabled: !!projectId, // Only run if projectId is provided
+        refetchOnWindowFocus: false
     });
 }

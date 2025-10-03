@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useProject } from "../ProjectProvider";
 
 // UI Components (assuming shadcn/ui)
@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 
 // Helper for cleaner class names
-import { cn } from "@/lib/utils"; // Assuming you have a utility like this from shadcn/ui
-import { useGlobalLoading } from "../LoaderProvider";
+import { cn } from "@/lib/utils";
+import { Project } from "@prisma/client";
 
 // Data structure for main navigation links
 const mainNavLinks = [
@@ -31,17 +31,10 @@ const mainNavLinks = [
     { href: "/meetings", label: "Meetings", icon: Users }, // Using a more appropriate icon
 ];
 
-export const SidebarComp = () => {
+export const SidebarComp = ({projects,setProjectId,isLoading}) => {
     const [collapsed, setCollapsed] = useState(false);
     const pathname = usePathname();
-    const { projects, isLoading, setProjectId } = useProject();
-    const { setLoading } = useGlobalLoading();
-
-    useEffect(() => {
-        setLoading(isLoading);
-    }, [isLoading, setLoading]);
-
-
+    
     const isActive = (path: string) => pathname === path;
 
     return (
@@ -90,7 +83,6 @@ export const SidebarComp = () => {
                                 Projects
                             </h3>
                         )}
-                        {isLoading && !collapsed && <div className="px-3 text-sm text-muted-foreground">Loading...</div>}
 
                         <ul className="space-y-1">
                             {projects?.map((proj) => (

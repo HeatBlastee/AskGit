@@ -21,6 +21,7 @@ import { useAuth } from "../AuthProvider";
 import { Spinner } from "../Spinner";
 import { User } from "@prisma/client";
 import { useGlobalLoading } from "../LoaderProvider";
+import { useEffect } from "react";
 
 // Helper for getting user initials
 const getInitials = (name: string) => {
@@ -31,14 +32,9 @@ const getInitials = (name: string) => {
         .join('');
 };
 
-export const Navbar = () => {
-    const { user, isLoading } = useAuth();
-    const { setLoading } = useGlobalLoading();
+export const Navbar = ({ user }: { user: User | null }) => {
     
-    useEffect(() => {
-        setLoading(isLoading);
-    }, [isLoading, setLoading]);
-
+    
     return (
         <header className="sticky top-0 z-10 w-full h-16 px-4 md:px-6 flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border">
             {/* Search Bar */}

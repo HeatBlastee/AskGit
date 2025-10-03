@@ -17,6 +17,8 @@ export const useGetProjects = () => {
             }
             return res.json();
         },
+        refetchOnWindowFocus: false,
+        
     });
 }
 
@@ -35,6 +37,7 @@ export const useGetProjectById = (id?: string) => {
             return res.json();
         },
         enabled: !!id, 
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -47,6 +50,7 @@ export const useTeamMembers = (projectId: string) => {
             return res.json();
         },
         enabled: !!projectId,
+        refetchOnWindowFocus: false,
     });
 };
 

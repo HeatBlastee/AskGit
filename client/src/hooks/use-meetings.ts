@@ -12,6 +12,7 @@ export const useMeetings = (projectId: string) => {
             return res.json();
         },
         enabled: !!projectId,
+        refetchOnWindowFocus: false
     });
 };
 
@@ -25,7 +26,8 @@ export const useMeeting = (meetingId: string) => {
             return res.json();
         },
         enabled: !!meetingId,
-        refetchInterval:4000
+        refetchInterval: 4000,
+        refetchOnWindowFocus: false
     });
 };
 

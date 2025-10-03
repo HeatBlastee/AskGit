@@ -1,31 +1,31 @@
-// app/providers/LoadingProvider.tsx
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext } from "react";
+import { useIsFetching, useIsMutating } from "@tanstack/react-query";
 import { Spinner } from "./Spinner";
 
-type LoadingContextType = {
-    isLoading: boolean;
-    setLoading: (loading: boolean) => void;
-};
+type LoadingContextType = {};
 
-const LoadingContext = createContext<LoadingContextType | null>(null);
+const LoadingContext = createContext<LoadingContextType>({});
 
 export const LoadingProvider = ({ children }: { children: React.ReactNode }) => {
-    const [isLoading, setLoading] = useState(false);
+    const isFetching = useIsFetching(); // number of active queries
+    const isMutating = useIsMutating(); // number of active mutations
+    const isLoading = isFetching + isMutating > 0;
 
     return (
-        <LoadingContext.Provider value={{ isLoading, setLoading }}>
+        <LoadingContext.Provider value={{}}>
             {children}
+
+            {/* Fullscreen Loader Overlay */}
             {isLoading && (
-                <Spinner/>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    
+                        <Spinner/>
+                </div>
             )}
         </LoadingContext.Provider>
     );
 };
 
-export const useGlobalLoading = () => {
-    const ctx = useContext(LoadingContext);
-    if (!ctx) throw new Error("useGlobalLoading must be used inside LoadingProvider");
-    return ctx;
-};
+export const useGlobalLoading = () => useContext(LoadingContext);
