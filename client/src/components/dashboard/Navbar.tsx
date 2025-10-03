@@ -19,9 +19,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../AuthProvider";
 import { Spinner } from "../Spinner";
-import { User } from "@prisma/client";
 import { useGlobalLoading } from "../LoaderProvider";
 import { useEffect } from "react";
+import { User } from "@/hooks/use-auth";
 
 // Helper for getting user initials
 const getInitials = (name: string) => {
