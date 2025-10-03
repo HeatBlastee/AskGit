@@ -129,7 +129,7 @@ const AskQuestionCard = () => {
                         />
                         <div className="h-4"></div>
                         <Button type='submit' disabled={loading}>
-                            {loading ? 'Asking AskGit...' : 'Ask AskGit!'}
+                            {loading ? 'Asking askGit...' : 'Ask askGit!'}
                         </Button>
                     </form>
                 </CardContent>

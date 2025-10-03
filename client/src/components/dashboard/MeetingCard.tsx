@@ -91,7 +91,7 @@ const MeetingCard = () => {
                     <Presentation className='h-10 w-10 animate-bounce' />
                     <h3 className='mt-2 text-sm font-semibold'>Create a new meeting</h3>
                     <p className='mt-5 text-center text-sm text-gray-500'>
-                        Analyse your meeting with AskGit.<br />
+                        Analyse your meeting with askGit.<br />
                     </p>
                     <div className='mt-4'>
                         <Button disabled={isUploading}>

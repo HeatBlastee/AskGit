@@ -1,12 +1,13 @@
-"use-client";
+"use client";
 
-import { useAuth, User } from "@/hooks/use-auth";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+import { toast } from "sonner";
+
 import { Search, User as UserIcon, Settings, LogOut } from "lucide-react";
 
-// UI Components (assuming shadcn/ui)
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,6 +17,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../AuthProvider";
+import { Spinner } from "../Spinner";
+import { User } from "@prisma/client";
+import { useGlobalLoading } from "../LoaderProvider";
 
 // Helper for getting user initials
 const getInitials = (name: string) => {
@@ -27,7 +32,13 @@ const getInitials = (name: string) => {
 };
 
 export const Navbar = () => {
-    const { user } = useAuth();
+    const { user, isLoading } = useAuth();
+    const { setLoading } = useGlobalLoading();
+    
+    useEffect(() => {
+        setLoading(isLoading);
+    }, [isLoading, setLoading]);
+
     return (
         <header className="sticky top-0 z-10 w-full h-16 px-4 md:px-6 flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border">
             {/* Search Bar */}
@@ -49,37 +60,53 @@ export const Navbar = () => {
 };
 
 
+
 const UserNav = ({ user }: { user: User | null }) => {
+    const router = useRouter();
+
     if (!user) {
-        // Render a login button or null if the user is not authenticated
         return null;
     }
 
     const userName = user.name || "User";
     const userEmail = user.email || "";
 
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("/api/auth/signout", { method: "POST" });
+            if (res.ok) {
+                toast.success("Logged out successfully");
+                router.push("/login"); // redirect to login page
+                router.refresh(); // refresh state
+            } else {
+                toast.error("Failed to log out");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Something went wrong");
+        }
+    };
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-9 w-9 border">
-                        {/* Only show first character of user name */}
-                        <AvatarFallback>
-                            {userName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{userName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                            {userEmail}
-                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
                     </div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem>
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
@@ -88,12 +115,16 @@ const UserNav = ({ user }: { user: User | null }) => {
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+
+                <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-    )
+    );
 };
+
+export default UserNav;

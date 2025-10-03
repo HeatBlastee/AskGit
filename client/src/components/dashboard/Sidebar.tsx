@@ -22,6 +22,7 @@ import {
 
 // Helper for cleaner class names
 import { cn } from "@/lib/utils"; // Assuming you have a utility like this from shadcn/ui
+import { useGlobalLoading } from "../LoaderProvider";
 
 // Data structure for main navigation links
 const mainNavLinks = [
@@ -34,6 +35,12 @@ export const SidebarComp = () => {
     const [collapsed, setCollapsed] = useState(false);
     const pathname = usePathname();
     const { projects, isLoading, setProjectId } = useProject();
+    const { setLoading } = useGlobalLoading();
+
+    useEffect(() => {
+        setLoading(isLoading);
+    }, [isLoading, setLoading]);
+
 
     const isActive = (path: string) => pathname === path;
 
@@ -47,7 +54,7 @@ export const SidebarComp = () => {
             >
                 {/* Header */}
                 <div className="flex items-center h-16 p-4 border-b border-border">
-                    {!collapsed && <div className="text-2xl font-extrabold text-primary mr-auto">AskGit</div>}
+                    {!collapsed && <div className="text-2xl font-extrabold text-primary mr-auto">askGit</div>}
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

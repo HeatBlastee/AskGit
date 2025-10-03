@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-const Page = () => {
+const SignUpPage = () => { // Renamed 'Page' to 'SignUpPage' for clarity
   const { mutate: signup, isPending: loading } = useSignUp()
   const router = useRouter()
   const [form, setForm] = useState({
@@ -35,17 +35,28 @@ const Page = () => {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4">
       {/* Decorative background circles */}
       <div className="absolute -top-10 -left-10 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
       <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-purple-400/10 blur-3xl" />
+
+      {/* --- askGit Branding --- */}
+      <div className="z-10 mb-8 select-none">
+        <span className="text-5xl font-extrabold tracking-tighter text-foreground drop-shadow-lg">
+          ask
+        </span>
+        <span className="text-5xl font-extrabold tracking-tighter text-primary drop-shadow-lg">
+          Git
+        </span>
+      </div>
+      {/* ----------------------- */}
 
       <div className="z-10 w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-md transition hover:shadow-2xl">
         <h1 className="mb-2 text-center text-3xl font-extrabold tracking-tight text-foreground">
           Create an Account
         </h1>
         <p className="mb-8 text-center text-sm text-muted-foreground">
-          Join us and get started in just a minute 
+          Join us and get started in just a minute
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -105,4 +116,4 @@ const Page = () => {
   )
 }
 
-export default Page
+export default SignUpPage
