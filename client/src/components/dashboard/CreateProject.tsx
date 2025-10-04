@@ -22,11 +22,10 @@ const CreateProject = () => {
             toast.error("Please enter a valid GitHub repository URL.");
             return;
         }
-
+        
         const res = mutate(data, {
             onSuccess: () => {
                 toast.success("Project created successfully! Redirecting for analysis...");
-                router.push(`/project/${res.id}`)
                 // In a real app, you'd likely router.push('/project/' + newProjectId) here
             },
             onError: (error) => {
