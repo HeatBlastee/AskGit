@@ -4,7 +4,7 @@ import { useProject } from '@/components/ProjectProvider'
 import { Button } from '@/components/ui/button'
 import { useDeleteMeeting, useMeetings } from '@/hooks/use-meetings'
 import useRefetch from '@/hooks/use-refetch'
-import { Badge } from 'lucide-react'
+import { Badge, Clock } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import { toast } from 'sonner'
@@ -32,9 +32,9 @@ const MeetingPage = () => {
                                         {meeting.name}
                                     </Link>
                                     {meeting.status === 'PROCESSING' && (
-                                        <Badge className='bg-yellow-500 text-white'>
+                                        <Clock className='bg-yellow-500 text-white'>
                                             Processing...
-                                        </Badge>
+                                        </Clock>
                                     )}
                                 </div>
                             </div>

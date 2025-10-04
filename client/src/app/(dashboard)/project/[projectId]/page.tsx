@@ -5,6 +5,7 @@ import DeleteButton from '@/components/dashboard/DeleteButton';
 import InviteButton from '@/components/dashboard/InviteMeeting';
 import MeetingCard from '@/components/dashboard/MeetingCard';
 import TeamMembers from '@/components/dashboard/TeamMember';
+import { Spinner } from '@/components/Spinner';
 import { useAuth } from '@/hooks/use-auth';
 import { useGetProjectById } from '@/hooks/use-get-projects';
 import { ExternalLink, Github } from 'lucide-react';
@@ -16,8 +17,12 @@ import React from 'react'
 
 const Page = () => {
     const { projectId } = useParams();
-    const { data: project } = useGetProjectById(projectId as string);
-    const {user} = useAuth();
+    const { data: project, isLoading } = useGetProjectById(projectId as string);
+    const { user } = useAuth();
+    
+    if (isLoading) {
+        return <Spinner/>
+    }
     
     return (
         <div>

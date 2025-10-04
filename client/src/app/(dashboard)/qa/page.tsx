@@ -26,7 +26,20 @@ const QAPage = () => {
                     return <Fragment key={question.id}>
                         <SheetTrigger onClick={() => setQuestionIndex(index)}>
                             <div className='flex items-center gap-4  rounded-lg p-4 shadow border'>
-                                <img className='rounded-full' height={30} width={30} src={question.user.imageUrl ?? ""} />
+                                {question.user.imageUrl ? (
+                                    <img
+                                        className="rounded-full"
+                                        height={30}
+                                        width={30}
+                                        src={question.user.imageUrl}
+                                        alt={question.user.name}
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center rounded-full bg-gray-300 text-gray-700 font-semibold h-[30px] w-[30px]">
+                                        {question.user.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+
                                 <div className='text-left flex flex-col'>
                                     <div className='flex items-center justify-between '>
                                         <p className=' line-clamp-1 text-lg font-medium'>

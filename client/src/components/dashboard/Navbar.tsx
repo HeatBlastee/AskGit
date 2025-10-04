@@ -87,9 +87,19 @@ const UserNav = ({ user }: { user: User | null }) => {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    {user.imageUrl ? (
+                                    <img
+                                        className="rounded-full"
+                                        height={30}
+                                        width={30}
+                                        src={question.user.imageUrl}
+                                        alt={question.user.name}
+                                    />
+                                ) :
                     <Avatar className="h-9 w-9 border">
                         <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
+}
                 </Button>
             </DropdownMenuTrigger>
 

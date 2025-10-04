@@ -27,7 +27,6 @@ export const useMeeting = (meetingId: string) => {
         },
         enabled: !!meetingId,
         refetchInterval: 4000,
-        refetchOnWindowFocus: false
     });
 };
 
