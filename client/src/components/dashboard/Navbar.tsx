@@ -92,8 +92,8 @@ const UserNav = ({ user }: { user: User | null }) => {
                                         className="rounded-full"
                                         height={30}
                                         width={30}
-                                        src={question.user.imageUrl}
-                                        alt={question.user.name}
+                                        src={user.imageUrl}
+                                        alt={user.name}
                                     />
                                 ) :
                     <Avatar className="h-9 w-9 border">

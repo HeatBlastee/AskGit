@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { user, isLoading } = useAuth();
     const { projects, setProjectId, isLoading: isProjectLoader } = useProject();
 
-    if (isLoading || isProjectLoader) {
+    if (isLoading || isProjectLoader || !user) {
         return <Spinner/>
     }
     
