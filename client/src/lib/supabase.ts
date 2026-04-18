@@ -38,14 +38,6 @@ export const uploadFile = async (
             .upload(filePath, file, {
                 contentType: file.type,
                 upsert: false,
-                onUploadProgress: (progressEvent: ProgressEvent) => {
-                    if (onProgress && progressEvent.lengthComputable) {
-                        const percent = Math.round(
-                            (progressEvent.loaded / progressEvent.total) * 100
-                        );
-                        onProgress(percent);
-                    }
-                },
             });
 
         if (error) throw error;

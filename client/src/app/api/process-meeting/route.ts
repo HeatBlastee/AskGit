@@ -1,17 +1,13 @@
-
 import { processMeeting } from "@/lib/assemblyAi";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { z } from "zod";
-
-
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-
         const { meetingUrl, projectId, meetingId } = body;
-        const { summaries } = await processMeeting(meetingUrl.url);
+
+        const { summaries } = await processMeeting(meetingUrl);
 
         await prisma.issue.createMany({
             data: summaries.map(summary => ({

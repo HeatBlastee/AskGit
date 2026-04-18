@@ -46,7 +46,7 @@ export function useSaveAnswer() {
 // -------------------------------
 // ✅ New: Get answers by projectId
 // -------------------------------
-export function useGetAnswers(projectId: string) {
+export function useGetAnswers(projectId: string | null) {
     return useQuery({
         queryKey: ["questions", projectId],
         queryFn: async () => {

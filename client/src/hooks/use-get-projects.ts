@@ -41,8 +41,17 @@ export const useGetProjectById = (id?: string) => {
     });
 };
 
+export interface TeamMember {
+    id: string;
+    user: {
+        id: string;
+        firstName: string | null;
+        imageUrl: string | null;
+    };
+}
+
 export const useTeamMembers = (projectId: string) => {
-    return useQuery({
+    return useQuery<TeamMember[]>({
         queryKey: ["team-members", projectId],
         queryFn: async () => {
             const res = await fetch(`/api/projects/${projectId}/team`);

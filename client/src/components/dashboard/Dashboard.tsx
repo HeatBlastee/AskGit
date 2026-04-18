@@ -5,86 +5,125 @@ import { useProject } from "../ProjectProvider";
 
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator"; // Add a Separator component for cleaner division
 
 // Icons
-import { PlusCircle, FolderKanban, Loader2, ArrowRight } from "lucide-react"; // Added ArrowRight for a subtle call to action
+import { PlusCircle, FolderKanban, Loader2, ArrowRight, Activity, Sparkles } from "lucide-react";
 
 // Custom Components
 import MeetingCard from "./MeetingCard";
+import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
     // Fetches project data using the provided hook
     const { projects, isLoading, setProjectId } = useProject();
 
     return (
-        <div className="flex flex-col gap-6 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-10 p-6 md:p-12 lg:p-16 max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex flex-col gap-2">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-gradient">
+                    Welcome Back<span className="text-primary">.</span>
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                    Monitor your repositories and gain deep insights with askGit.
+                </p>
+            </div>
 
             {/* ## Get Started Section */}
-            <section>
-                <h2 className="text-3xl font-bold tracking-tight mb-6 text-gray-900 dark:text-gray-50">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <section className="space-y-8">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h2 className="text-xl font-bold tracking-tight uppercase tracking-[0.2em] opacity-70">Quick Actions</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
                     {/* ### Card for creating a new project */}
                     <Link
                         href="/create"
-                        className="h-full block transition-transform duration-300 hover:scale-[1.02]" // Added scale effect
+                        className="group relative"
                     >
-                        <Card className="group flex flex-col items-center justify-center p-8 sm:p-10 h-full border-2 border-dashed bg-card/50 transition-all duration-300 ease-in-out hover:border-primary/70 hover:shadow-xl shadow-md">
-                            <PlusCircle className="h-12 w-12 text-primary transition-transform duration-500 group-hover:rotate-12" />
-                            <h3 className="mt-4 text-xl font-bold text-center text-foreground">
-                                Start a New Analysis
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                        <Card className="glass relative flex flex-col items-center justify-center p-10 h-full border-white/5 transition-all duration-500 ease-out group-hover:bg-white/10 group-hover:-translate-y-2">
+                            <div className="p-4 bg-primary/10 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <PlusCircle className="h-10 w-10 text-primary group-hover:rotate-90 transition-transform duration-500" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-center mb-2">
+                                Start Analysis
                             </h3>
-                            <p className="mt-2 text-base text-center text-muted-foreground">
-                                Analyze a new Git repository and get insights.
+                            <p className="text-muted-foreground text-center text-sm leading-relaxed max-w-[200px]">
+                                Connect a new Git repository and let our AI analyze it.
                             </p>
-                            <ArrowRight className="mt-3 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-primary" />
+                            <div className="mt-6 flex items-center gap-2 text-primary font-bold text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                                Get Started <ArrowRight className="h-4 w-4" />
+                            </div>
                         </Card>
                     </Link>
 
-                    {/* ### Card for creating a new meeting (using the provided MeetingCard component) */}
-                    {/* Assuming MeetingCard is styled similarly or is a placeholder for a feature */}
-                    <MeetingCard />
+                    {/* ### Card for creating a new meeting */}
+                    <div className="group relative">
+                        <MeetingCard />
+                    </div>
                 </div>
             </section>
 
-            <Separator className="my-6" /> {/* Use the dedicated Separator component */}
-
             {/* ## Existing Projects Section */}
-            <section>
-                <h2 className="text-3xl font-bold tracking-tight mb-6 text-gray-900 dark:text-gray-50">Recent Projects</h2>
+            <section className="space-y-8">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-primary" />
+                        <h2 className="text-xl font-bold tracking-tight uppercase tracking-[0.2em] opacity-70">Recent Projects</h2>
+                    </div>
+                    {projects && projects.length > 0 && (
+                        <div className="text-xs font-bold text-muted-foreground bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                            {projects.length} Total Projects
+                        </div>
+                    )}
+                </div>
 
                 {/* ### Loading state for projects */}
                 {isLoading && (
-                    <div className="flex flex-col items-center justify-center p-16 bg-muted/30 rounded-lg shadow-inner">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary/70" />
-                        <p className="mt-4 text-xl font-medium text-muted-foreground">Fetching your project history...</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-48 glass animate-pulse rounded-3xl" />
+                        ))}
                     </div>
                 )}
 
                 {/* ### Renders projects if they exist */}
                 {!isLoading && projects && projects.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {projects.map((project) => (
                             <Link
                                 key={project.id}
                                 href={`/project/${project.id}`}
                                 onClick={() => setProjectId(project.id)}
-                                className="block transition-transform duration-200 hover:scale-[1.03]"
+                                className="group relative"
                             >
-                                <Card className="h-full flex flex-col justify-between hover:shadow-2xl hover:border-primary transition-all duration-300">
-                                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                                        <CardTitle className="text-lg font-semibold truncate leading-snug pr-4" title={project.name}>
-                                            {project.name}
-                                        </CardTitle>
-                                        <FolderKanban className="h-6 w-6 text-primary/70 flex-shrink-0" />
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <span className="inline-block h-2 w-2 bg-green-500 rounded-full mr-1"></span>
-                                            Active Analysis
+                                <Card className="glass h-full flex flex-col justify-between border-white/5 transition-all duration-500 ease-out group-hover:bg-white/10 group-hover:-translate-y-2 group-hover:border-primary/20">
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="p-3 bg-white/5 rounded-xl group-hover:bg-primary/10 transition-colors duration-500">
+                                                <FolderKanban className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors duration-500" />
+                                            </div>
+                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-bold text-green-500 uppercase tracking-wider scale-90">
+                                                <span className="relative flex h-2 w-2">
+                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                                </span>
+                                                Active
+                                            </div>
                                         </div>
-                                    </CardContent>
+                                        <h3 className="text-lg font-bold truncate group-hover:text-primary transition-colors duration-300" title={project.name}>
+                                            {project.name}
+                                        </h3>
+                                        <p className="text-xs text-muted-foreground mt-2 line-clamp-1 opacity-60">
+                                            {project.githubUrl}
+                                        </p>
+                                    </div>
+                                    <div className="px-6 py-4 mt-auto border-t border-white/5 flex items-center justify-between text-[11px] font-bold text-muted-foreground">
+                                        <span>View Analysis</span>
+                                        <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                                    </div>
                                 </Card>
                             </Link>
                         ))}
@@ -93,16 +132,21 @@ const Dashboard = () => {
 
                 {/* ### Empty state when no projects are found */}
                 {!isLoading && (!projects || projects.length === 0) && (
-                    <div className="text-center py-20 border-2 border-dashed rounded-xl bg-background/50 border-gray-300 dark:border-gray-700">
-                        <FolderKanban className="mx-auto h-16 w-16 text-muted-foreground/50" />
-                        <h3 className="mt-4 text-2xl font-semibold">No Projects Found Yet</h3>
-                        <p className="mt-2 text-base text-muted-foreground">
-                            Get started by creating your first project using the **Start a New Analysis** card above.
-                        </p>
-                        <Link href="/create" className="mt-6 inline-flex items-center text-primary hover:text-primary/80 font-medium transition-colors">
-                            Create Project Now
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
+                    <div className="text-center py-24 glass rounded-[40px] border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="relative z-10">
+                            <div className="mx-auto h-20 w-20 bg-white/5 rounded-[30px] flex items-center justify-center mb-8 rotate-3 group-hover:rotate-12 transition-transform duration-500">
+                                <FolderKanban className="h-10 w-10 text-muted-foreground/30 group-hover:text-primary/40 transition-colors duration-500" />
+                            </div>
+                            <h3 className="text-3xl font-black mb-3 text-gradient">Deep Void Detected</h3>
+                            <p className="text-muted-foreground max-w-sm mx-auto text-lg leading-relaxed">
+                                No projects found in our logic engines. Connect your first repository to begin.
+                            </p>
+                            <Link href="/create" className="mt-10 inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold hover:shadow-[0_0_30px_oklch(var(--primary)/0.4)] transition-all duration-300 hover:scale-105 active:scale-95">
+                                Initialize First Project
+                                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
                     </div>
                 )}
             </section>
@@ -110,4 +154,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Dashboard;

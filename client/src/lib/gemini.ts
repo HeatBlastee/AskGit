@@ -5,7 +5,7 @@ const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey as string);
 
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-1.5-flash",
 });
 
 
@@ -61,19 +61,18 @@ export async function summariseCode(doc: Document) {
           ---
           Please provide a summary of the code above in no more than 100 words.`
         ]);
-        return response.response.text();
+        return response.response.text() || `Code file: ${doc.metadata.source}`;
     } catch (error) {
         // console.error("Error generating content:", error);
-        return "";
+        return `Code file: ${doc.metadata.source}`;
     }
 }
 
 export async function generateEmbedding(summary: string) {
     const model = genAI.getGenerativeModel({
-        model: "text-embedding-004",
-
+        model: "gemini-embedding-001",
     })
-    const result = await model.embedContent(summary)
+    const result = await model.embedContent(summary);
     const embedding = result.embedding;
     return embedding.values;
 }

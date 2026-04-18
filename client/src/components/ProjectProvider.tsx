@@ -13,7 +13,7 @@ export type Project = {
 
 type ProjectContextType = {
     projects?: Project[];
-    project?: Project;
+    project: Project | null;
     projectId: string | null;
     setProjectId: (id: string) => void;
     isLoading: boolean;

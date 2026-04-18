@@ -13,6 +13,7 @@ import CodeRefrence from './code-refrence'
 import { useSaveAnswer } from '@/hooks/use-save-answer'
 import { useProject } from '../ProjectProvider'
 import { useAuth } from '../AuthProvider'
+import { Sparkles, Loader2, ArrowRight } from 'lucide-react'
 
 const AskQuestionCard = () => {
     const { projectId } = useProject();
@@ -51,27 +52,29 @@ const AskQuestionCard = () => {
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-[73vw]">
-                    <DialogHeader>
-                        <div className="flex items-center gap-2 ">
-                            <DialogTitle>
-                                <div className='flex items-center gap-2'>
-                                    <h1 className='text-2xl font-bold'>AskGit</h1>
+                <DialogContent className="glass sm:max-w-[73vw] border-white/5 rounded-[30px] shadow-2xl overflow-hidden p-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                    <DialogHeader className="p-8 pb-4 border-b border-white/5 relative z-10">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-primary/10 rounded-xl">
+                                    <Sparkles className="h-5 w-5 text-primary" />
                                 </div>
-                            </DialogTitle>
+                                <DialogTitle className="text-2xl font-black text-gradient">AskGit Analysis</DialogTitle>
+                            </div>
 
                             <Button
-                                variant={'outline'}
+                                className="rounded-xl font-bold bg-primary text-primary-foreground hover:shadow-[0_0_20px_oklch(var(--primary)/0.3)] transition-all"
                                 disabled={saveAnswer.isPending}
                                 onClick={() => {
-                                    if (!userId) {
-                                        toast.error("User ID missing")
+                                    if (!userId || !projectId) {
+                                        toast.error(!userId ? "User ID missing" : "Project ID missing")
                                         return
                                     }
 
                                     saveAnswer.mutate(
                                         {
-                                            projectId,
+                                            projectId: projectId as string,
                                             question,
                                             answer,
                                             filesRefrences: filesReferences,
@@ -79,7 +82,7 @@ const AskQuestionCard = () => {
                                         },
                                         {
                                             onSuccess: () => {
-                                                toast.success('Answer saved successfully')
+                                                toast.success('Answer saved to your knowledge base')
                                                 refetch();
                                             },
                                             onError: () => {
@@ -89,47 +92,76 @@ const AskQuestionCard = () => {
                                     )
                                 }}
                             >
-                                {saveAnswer.isPending ? "Saving..." : "Save Answer"}
+                                {saveAnswer.isPending ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : "Save Insight"}
                             </Button>
                         </div>
                     </DialogHeader>
 
-                    <MarkdownPreview
-                        source={answer}
-                        className='max-w-[70vw] h-full max-h-[30vh] overflow-scroll -mt-2'
-                        style={{ padding: '1rem', background: 'transparent' }}
-                        wrapperElement={{
-                            "data-color-mode": theme.theme === 'dark' ? 'dark' : 'light',
-                        }}
-                    />
+                    <div className="p-8 space-y-8 relative z-10 overflow-y-auto max-h-[70vh] no-scrollbar">
+                        <MarkdownPreview
+                            source={answer}
+                            className='rounded-2xl border border-white/5 bg-black/20 p-6'
+                            style={{ background: 'transparent' }}
+                            wrapperElement={{
+                                "data-color-mode": theme.theme === 'dark' ? 'dark' : 'light',
+                            }}
+                        />
 
-                    <CodeRefrence filesRefrences={filesReferences} />
+                        <div className="space-y-4">
+                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 opacity-50">References Found</h3>
+                            <CodeRefrence filesRefrences={filesReferences} />
+                        </div>
+                    </div>
 
-                    <button
-                        type='button'
-                        onClick={() => { setOpen(false) }}
-                        className='border rounded-md py-2 -mt-3 bg-primary/40'
-                    >
-                        Close
-                    </button>
+                    <div className="p-4 bg-white/5 backdrop-blur-md border-t border-white/5 flex justify-center">
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setOpen(false) }}
+                            className="font-bold text-muted-foreground hover:text-foreground"
+                        >
+                            Dismiss
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
 
-            <Card className='relative col-span-3'>
-                <CardHeader>
-                    <CardTitle>Ask a question</CardTitle>
+            <Card className='glass relative col-span-3 border-white/5 overflow-hidden group'>
+                <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                    <Sparkles className="h-20 w-20 text-primary rotate-12" />
+                </div>
+                <CardHeader className="relative z-10">
+                    <CardTitle className="text-2xl font-black">Ask a question</CardTitle>
+                    <p className="text-sm text-muted-foreground">Deep dive into your codebase with AI.</p>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={onSubmit}>
+                <CardContent className="relative z-10">
+                    <form onSubmit={onSubmit} className="space-y-6">
                         <Textarea
-                            className='h-28'
-                            placeholder='Which file should I edit to change the home page?'
+                            className='min-h-[120px] glass-dark border-white/5 rounded-2xl focus-visible:ring-primary/30 transition-all resize-none p-6 text-lg placeholder:opacity-30'
+                            placeholder='e.g., Which file should I edit to change the home page?'
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                         />
-                        <div className="h-4"></div>
-                        <Button type='submit' disabled={loading}>
-                            {loading ? 'Asking askGit...' : 'Ask askGit!'}
+                        <Button 
+                            type='submit' 
+                            disabled={loading || !question.trim()}
+                            className="w-full sm:w-auto px-10 py-6 rounded-2xl font-bold bg-primary text-primary-foreground hover:shadow-[0_0_30px_oklch(var(--primary)/0.4)] transition-all hover:scale-[1.02] active:scale-95 text-lg"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                                    Synthesizing...
+                                </>
+                            ) : (
+                                <>
+                                    Ask askGit
+                                    <ArrowRight className="ml-2 h-5 w-5" />
+                                </>
+                            )}
                         </Button>
                     </form>
                 </CardContent>

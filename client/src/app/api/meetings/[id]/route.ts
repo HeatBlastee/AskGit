@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 
 // DELETE /api/meetings/:id
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         const deleted = await prisma.meeting.delete({
@@ -17,7 +17,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
 
 // GET /api/meetings/:id
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         const meeting = await prisma.meeting.findUnique({

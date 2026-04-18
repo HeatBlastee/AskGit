@@ -13,9 +13,11 @@ import { useProject } from '../ProjectProvider';
 import { useCreateMeeting } from '@/hooks/use-meetings';
 import { Progress } from '@/components/ui/progress'; 
 import { CircularProgress } from '../CircularProgress';
+import { cn } from "@/lib/utils";
+import { Activity, Sparkles } from "lucide-react";
 
 const MeetingCard = () => {
-    const project = useProject()
+    const { projects, projectId, setProjectId } = useProject();
     const router = useRouter();
 
     const processMeeting = useMutation({
@@ -38,6 +40,10 @@ const MeetingCard = () => {
         accept: { 'audio/*': [] },
         multiple: false,
         onDrop: async (acceptedFiles) => {
+            if (!projectId) {
+                toast.error("Please select a project first");
+                return;
+            }
             setIsUploading(true)
             setProgress(0)
 
@@ -54,10 +60,16 @@ const MeetingCard = () => {
             }
 
             try {
-                const url = await uploadFile(file as File, setProgress) as string
+                const result = await uploadFile(file as File, setProgress);
+                
+                if (!result.success || !result.url) {
+                    throw new Error(typeof result.error === 'string' ? result.error : "Upload failed");
+                }
+
+                const url = result.url;
 
                 uploadMeeting.mutate({
-                    projectId: project.projectId,
+                    projectId: projectId,
                     meetingUrl: url,
                     name: file.name,
                 }, {
@@ -67,7 +79,7 @@ const MeetingCard = () => {
                         processMeeting.mutateAsync({
                             meetingUrl: url,
                             meetingId: meeting.id,
-                            projectId: project.projectId
+                            projectId: projectId
                         })
                     },
                     onError: () => {
@@ -85,34 +97,43 @@ const MeetingCard = () => {
     })
 
     return (
-        <Card className='col-span-2 flex flex-col items-center justify-center p-10' {...getRootProps()}>
+        <Card 
+            className={cn(
+                'glass relative group flex flex-col items-center justify-center p-10 h-full border-white/5 transition-all duration-500 ease-out cursor-pointer hover:bg-white/10 group-hover:-translate-y-2',
+                isUploading && "cursor-wait"
+            )} 
+            {...getRootProps()}
+        >
             {!isUploading && (
                 <>
-                    <Presentation className='h-10 w-10 animate-bounce' />
-                    <h3 className='mt-2 text-sm font-semibold'>Create a new meeting</h3>
-                    <p className='mt-5 text-center text-sm text-gray-500'>
-                        Analyse your meeting with askGit.<br />
-                    </p>
-                    <div className='mt-4'>
-                        <Button disabled={isUploading}>
-                            <Upload className='h-5 w-5 mr-2' aria-hidden='true' />
-                            Upload Meeting
-                            <input className='hidden' {...getInputProps()} />
-                        </Button>
+                    <div className="p-4 bg-primary/10 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <Presentation className='h-10 w-10 text-primary group-hover:rotate-12 transition-transform duration-500' />
                     </div>
+                    <h3 className='text-2xl font-bold text-center mb-2'>Analyze Meeting</h3>
+                    <p className='text-muted-foreground text-center text-sm leading-relaxed max-w-[200px] mb-6'>
+                        Upload your meeting audio for AI-powered summarization.
+                    </p>
+                    <Button disabled={isUploading} className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20">
+                        <Upload className='h-4 w-4 mr-2' />
+                        Upload Audio
+                        <input className='hidden' {...getInputProps()} />
+                    </Button>
                 </>
             )}
 
             {isUploading && (
-                <div className="flex flex-col items-center justify-center w-full">
+                <div className="flex flex-col items-center justify-center w-full space-y-6">
                     <CircularProgress progress={progress} />
-                    <p className="mt-4 text-gray-500 text-center flex gap-2 items-center">
-                        <Loader2 className="animate-spin" />
-                        Uploading your meeting...
-                    </p>
+                    <div className="space-y-2 text-center">
+                        <p className="text-sm font-bold text-primary animate-pulse">
+                            Processing Audio...
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-50">
+                            Uploading to secure vault
+                        </p>
+                    </div>
                 </div>
             )}
-
         </Card>
     )
 }

@@ -53,7 +53,7 @@ const IssuesList = ({ meetingId }: Props) => {
                 <div className="h-4"></div>
 
                 <div className='grid grid-cols-1 gap-2 sm:grid-cols-3'>
-                    {meeting?.issues.map(issue => (
+                    {meeting?.issues.map((issue: any) => (
                         <IssueCard key={issue.id} issue={issue} />
                     ))}
                 </div>
@@ -63,7 +63,7 @@ const IssuesList = ({ meetingId }: Props) => {
 }
 
 
-function IssueCard({ issue }: { issue: NonNullable<RouterOutputs['project']['getMeetingById']>['issues'][number] }) {
+function IssueCard({ issue }: { issue: any }) {
 
     const [open, setOpen] = useState(false);
 
