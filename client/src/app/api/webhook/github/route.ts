@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { after } from "next/server";
+import prisma from "@/lib/prisma";
+import { processPrReview } from "@/lib/review";
+
+export async function POST(req: NextRequest) {
+    try {
+        // 1. Verify the GitHub Webhook Signature
+        const signature = req.headers.get("x-hub-signature-256");
+        if (!signature) {
+            return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+        }
+
+        const rawBody = await req.text();
+        const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+        if (!secret) {
+            console.error("GITHUB_WEBHOOK_SECRET is not configured");
+            return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+        }
+
+        const hmac = crypto.createHmac("sha256", secret);
+        const digest = "sha256=" + hmac.update(rawBody).digest("hex");
+
+        if (signature !== digest) {
+            return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+        }
+
+        // 2. Parse payload
+        const payload = JSON.parse(rawBody);
+
+        // We only care about PR opened or synchronize
+        const event = req.headers.get("x-github-event");
+        if (event !== "pull_request") {
+            return NextResponse.json({ message: "Ignored event" }, { status: 200 });
+        }
+
+        if (payload.action !== "opened" && payload.action !== "synchronize") {
+            return NextResponse.json({ message: "Ignored action" }, { status: 200 });
+        }
+
+        const prNumber = payload.pull_request.number;
+        const repoFullName = payload.repository.full_name;
+        const headSha = payload.pull_request.head.sha;
+        const installationId = payload.installation?.id;
+
+        if (!installationId) {
+            return NextResponse.json({ error: "No installation ID" }, { status: 400 });
+        }
+
+        // 3. Deduplication check
+        // GitHub might retry webhooks. We check if we already processed this SHA for this PR.
+        const existingReview = await prisma.prReview.findUnique({
+            where: {
+                repo_prNumber_headSha: {
+                    repo: repoFullName,
+                    prNumber,
+                    headSha,
+                },
+            },
+        });
+
+        if (existingReview) {
+            console.log(`Already reviewed PR ${prNumber} at SHA ${headSha}`);
+            return NextResponse.json({ message: "Already reviewed" }, { status: 200 });
+        }
+
+        // Mark as being processed
+        await prisma.prReview.create({
+            data: {
+                repo: repoFullName,
+                prNumber,
+                headSha,
+            },
+        });
+
+        // 4. Offload the review processing to the background
+        after(async () => {
+            console.log(`Starting background PR review for ${repoFullName}#${prNumber}`);
+            try {
+                await processPrReview({
+                    repoFullName,
+                    prNumber,
+                    headSha,
+                    installationId,
+                    title: payload.pull_request.title,
+                    description: payload.pull_request.body || "",
+                });
+            } catch (error) {
+                console.error("Error in background PR review:", error);
+            }
+        });
+
+        return NextResponse.json({ message: "Review started" }, { status: 200 });
+    } catch (error) {
+        console.error("Webhook processing error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
