@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-// for new commit
+// for new commit   -new testing
 export function middleware(req: NextRequest) {
     const token = req.cookies.get("session")?.value;
 
