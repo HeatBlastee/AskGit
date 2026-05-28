@@ -219,7 +219,6 @@ Be extremely specific, reference exact lines, and follow the Team Standards stri
                     { role: "system", content: "You are a helpful and expert AI code reviewer." },
                     { role: "user", content: prompt }
                 ],
-                temperature: 0.1,
             });
 
             let rawText = result.choices[0]?.message?.content || "";
@@ -280,7 +279,6 @@ Write a single, cohesive, high-level summary (3-4 sentences) summarizing the ove
                     { role: "system", content: "You are a helpful assistant." },
                     { role: "user", content: summaryPrompt }
                 ],
-                temperature: 0.3,
             });
             finalSummary = summaryResult.choices[0]?.message?.content || batchSummaries.join("\n\n");
         } catch (err) {
