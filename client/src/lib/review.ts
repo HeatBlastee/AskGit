@@ -15,6 +15,10 @@ interface ReviewPayload {
 export async function processPrReview({ repoFullName, prNumber, headSha, installationId, title, description }: ReviewPayload) {
     const [owner, repo] = repoFullName.split("/");
 
+    // --- STEP 1: AUTHENTICATE WITH GITHUB ---
+    // Instead of using a static Personal Access Token, we authenticate as a GitHub App.
+    // We sign a JWT using our Private Key + App ID, then request an "Installation Token"
+    // specific to the repository the PR belongs to. This token is temporary and very secure.
     const octokit = new Octokit({
         authStrategy: createAppAuth,
         auth: {
@@ -24,7 +28,9 @@ export async function processPrReview({ repoFullName, prNumber, headSha, install
         },
     });
 
-    // 1. Fetch PR diff
+    // --- STEP 2: FETCH PR DIFF ---
+    // We ask GitHub for the raw diff of the PR to see exactly what lines changed.
+    console.log(`[Review Pipeline] Fetching PR diff for ${repoFullName}#${prNumber}...`);
     const diffResponse = await octokit.rest.pulls.get({
         owner,
         repo,
@@ -52,13 +58,15 @@ export async function processPrReview({ repoFullName, prNumber, headSha, install
     });
 
     if (filteredFiles.length === 0) {
-        console.log("No reviewable files in diff.");
+        console.log(`[Review Pipeline] No reviewable files in diff for ${repoFullName}#${prNumber}.`);
         return;
     }
+    console.log(`[Review Pipeline] Diff parsed successfully. Found ${filteredFiles.length} reviewable files.`);
 
     // 2. Fetch STANDARDS.md
     let standardsContext = "";
     try {
+        console.log(`[Review Pipeline] Checking for STANDARDS.md in ${repoFullName}...`);
         const standardsResponse = await octokit.rest.repos.getContent({
             owner,
             repo,
@@ -67,12 +75,15 @@ export async function processPrReview({ repoFullName, prNumber, headSha, install
 
         if ("content" in standardsResponse.data) {
             standardsContext = Buffer.from(standardsResponse.data.content, "base64").toString("utf-8");
+            console.log(`[Review Pipeline] Successfully loaded STANDARDS.md (${standardsContext.length} bytes).`);
         }
     } catch (error) {
+        console.log(`[Review Pipeline] No STANDARDS.md found in ${repoFullName}. Skipping standards check.`);
         // Ignored if STANDARDS.md doesn't exist
     }
 
     // 3. Prepare AI Prompt
+    console.log(`[Review Pipeline] Preparing AI prompt and calling Gemini for ${repoFullName}#${prNumber}...`);
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
 
@@ -138,8 +149,10 @@ Be extremely specific, reference exact lines, and follow the Team Standards stri
 `;
 
     // 4. Call Gemini
+    console.log(`[Review Pipeline] Sending prompt to Gemini...`);
     const result = await model.generateContent(prompt);
     let rawText = result.response.text();
+    console.log(`[Review Pipeline] Received response from Gemini. Parsing JSON...`);
     // Clean up potential markdown formatting around JSON
     if (rawText.startsWith("\`\`\`json")) {
         rawText = rawText.replace(/^\`\`\`json/, "").replace(/\`\`\`$/, "").trim();
@@ -151,9 +164,12 @@ Be extremely specific, reference exact lines, and follow the Team Standards stri
     try {
         reviewData = JSON.parse(rawText);
     } catch (e) {
-        console.error("Failed to parse Gemini output", rawText);
+        console.error(`[Review Pipeline] Failed to parse Gemini output for ${repoFullName}#${prNumber}:`, rawText);
         return;
     }
+    
+    console.log(`[Review Pipeline] JSON parsed successfully. Review summary: "${reviewData.summary.substring(0, 50)}..."`);
+    console.log(`[Review Pipeline] Found ${reviewData.comments?.length || 0} potential inline comments. Validating against diff...`);
 
     // 5. Construct Review Output
     const summaryMarkdown = `## 🔍 AskGit Review
@@ -200,7 +216,10 @@ ${reviewData.comments?.length > 0 ? "Inline comments below point to specific lin
         }
     }
 
-    // 6. Post Review to GitHub
+    // --- STEP 6: POST REVIEW TO GITHUB ---
+    // Finally, we take the generated markdown summary and the parsed inline comments
+    // and submit them back to the PR using GitHub's Review API.
+    console.log(`[Review Pipeline] Posting review to GitHub with ${validComments.length} inline comments...`);
     try {
         await octokit.rest.pulls.createReview({
             owner,
@@ -211,8 +230,8 @@ ${reviewData.comments?.length > 0 ? "Inline comments below point to specific lin
             event: "COMMENT",
             comments: validComments,
         });
-        console.log(`Successfully posted review to ${repoFullName}#${prNumber}`);
+        console.log(`[Review Pipeline] ✅ Successfully posted review to ${repoFullName}#${prNumber}`);
     } catch (error) {
-        console.error("Failed to post GitHub review:", error);
+        console.error(`[Review Pipeline] ❌ Failed to post GitHub review for ${repoFullName}#${prNumber}:`, error);
     }
 }

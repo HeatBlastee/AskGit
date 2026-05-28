@@ -6,7 +6,11 @@ import { processPrReview } from "@/lib/review";
 
 export async function POST(req: NextRequest) {
     try {
-        // 1. Verify the GitHub Webhook Signature
+        // --- STEP 1: SECURITY VERIFICATION ---
+        // GitHub sends a cryptographic hash (HMAC) of the payload using our secret.
+        // We calculate the hash ourselves and compare it. If they don't match, 
+        // the request is rejected. This prevents bad actors from spoofing GitHub.
+        console.log("[Webhook] Received request. Verifying signature...");
         const signature = req.headers.get("x-hub-signature-256");
         if (!signature) {
             return NextResponse.json({ error: "Missing signature" }, { status: 401 });
@@ -29,6 +33,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Parse payload
         const payload = JSON.parse(rawBody);
+        console.log(`[Webhook] Signature verified. Event: ${req.headers.get("x-github-event")}, Action: ${payload.action}`);
 
         // We only care about PR opened or synchronize
         const event = req.headers.get("x-github-event");
@@ -62,10 +67,11 @@ export async function POST(req: NextRequest) {
         });
 
         if (existingReview) {
-            console.log(`Already reviewed PR ${prNumber} at SHA ${headSha}`);
+            console.log(`[Webhook] Skipped: Already reviewed PR ${prNumber} at SHA ${headSha}`);
             return NextResponse.json({ message: "Already reviewed" }, { status: 200 });
         }
 
+        console.log(`[Webhook] Marking PR ${prNumber} (SHA ${headSha}) as processing in database...`);
         // Mark as being processed
         await prisma.prReview.create({
             data: {
@@ -75,9 +81,12 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // 4. Offload the review processing to the background
+        // --- STEP 4: ASYNCHRONOUS PROCESSING ---
+        // GitHub expects a 2xx response within 10 seconds or it marks the webhook as "timed out".
+        // AI PR reviews take 30-60 seconds. To solve this, we use Next.js `after()`.
+        // `after()` runs the code block in the background *after* the HTTP 200 response is sent back to GitHub!
         after(async () => {
-            console.log(`Starting background PR review for ${repoFullName}#${prNumber}`);
+            console.log(`[Background] Started PR review task for ${repoFullName}#${prNumber}`);
             try {
                 await processPrReview({
                     repoFullName,
