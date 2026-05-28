@@ -1,6 +1,6 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import parseDiff from "parse-diff";
 
 interface ReviewPayload {
@@ -84,11 +84,13 @@ export async function processPrReview({ repoFullName, prNumber, headSha, install
 
     // 3. Prepare AI Prompt
     console.log(`[Review Pipeline] Preparing AI prompt and calling Gemini for ${repoFullName}#${prNumber}...`);
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) throw new Error("GITHUB_TOKEN is missing. Required for GitHub Models.");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new OpenAI({
+        baseURL: process.env.GITHUB_MODELS_ENDPOINT || "https://models.inference.ai.azure.com",
+        apiKey: token,
+    });
 
     // Build diff text for AI
     let diffText = "";
@@ -148,10 +150,18 @@ Only return "Critical" or "High" severity issues as line comments. Medium/Low ca
 Be extremely specific, reference exact lines, and follow the Team Standards strictly if provided. Ensure paths and line numbers exactly match the "to" file paths and added/modified line numbers in the diff.
 `;
 
-    // 4. Call Gemini
-    console.log(`[Review Pipeline] Sending prompt to Gemini...`);
-    const result = await model.generateContent(prompt);
-    let rawText = result.response.text();
+    // 4. Call GitHub Models via OpenAI SDK
+    console.log(`[Review Pipeline] Sending prompt to GitHub Models (o4-mini)...`);
+    const result = await client.chat.completions.create({
+        model: "o4-mini",
+        messages: [
+            { role: "system", content: "You are a helpful and expert AI code reviewer." },
+            { role: "user", content: prompt }
+        ],
+        temperature: 0.1,
+    });
+    
+    let rawText = result.choices[0]?.message?.content || "";
     console.log(`[Review Pipeline] Received response from Gemini. Parsing JSON...`);
     // Clean up potential markdown formatting around JSON
     if (rawText.startsWith("\`\`\`json")) {
