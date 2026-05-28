@@ -1,12 +1,12 @@
 "use server"
 
 import { streamText } from "ai"
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
+import { createGroq } from "@ai-sdk/groq"
 import { generateEmbedding } from "@/lib/gemini"
 import prisma from "@/lib/prisma"
 
-const google = createGoogleGenerativeAI({
-    apiKey: process.env.GEMINI_API_KEY!,
+const groq = createGroq({
+    apiKey: process.env.GROQ_API_KEY!,
 })
 
 export async function askQuestion(question: string, projectId: string) {
@@ -33,7 +33,7 @@ export async function askQuestion(question: string, projectId: string) {
     }
 
     const { textStream } = await streamText({
-        model: google("gemini-2.0-flash"),
+        model: groq("llama-3.1-8b-instant"),
         prompt: `
 You are an AI code assistant who answers questions about the codebase. Your target audience is a technical intern who is new to the codebase.
 

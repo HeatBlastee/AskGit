@@ -145,3 +145,15 @@ enum MeetingStatus {
   PROCESSING
   COMPLETED
 }
+
+model PrReview {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  repo        String
+  prNumber    Int
+  headSha     String
+
+  @@unique([repo, prNumber, headSha])
+}

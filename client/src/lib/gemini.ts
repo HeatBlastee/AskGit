@@ -1,17 +1,21 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Document } from "@langchain/core/documents";
+import { generateText } from "ai";
+import { createGroq } from "@ai-sdk/groq";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey as string);
 
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+const groq = createGroq({
+    apiKey: process.env.GROQ_API_KEY!,
 });
 
+const groqModel = groq("llama-3.1-8b-instant");
 
 export const aiSummariseCommit = async (diff: string) => {
-    const response = await model.generateContent([
-        `You are an expert programmer, and you are trying to summarize a git diff.
+    const response = await generateText({
+        model: groqModel,
+        prompt: `You are an expert programmer, and you are trying to summarize a git diff.
     Reminders about the git diff format:
     For every file, there are a few metadata lines, like (for example):
     \`\`\`
@@ -39,10 +43,9 @@ export const aiSummariseCommit = async (diff: string) => {
     The last comment does not include the file names,
     because there were more than two relevant files in the hypothetical commit.
     Do not include parts of the example in your summary.
-    It is given only as an example of appropriate comments.`,
-        `Please summarise the following diff file: \n\n${diff}`
-    ])
-    return response.response.text();
+    It is given only as an example of appropriate comments.\n\nPlease summarise the following diff file: \n\n${diff}`,
+    });
+    return response.text;
 }
 
 
@@ -52,16 +55,17 @@ export async function summariseCode(doc: Document) {
     // console.log("source", doc.metadata);
     console.log("source code:", code);
     try {
-        const response = await model.generateContent([
-            `You are an intelligent senior software engineer who specializes in onboarding junior software engineers onto projects. 
+        const response = await generateText({
+            model: groqModel,
+            prompt: `You are an intelligent senior software engineer who specializes in onboarding junior software engineers onto projects. 
           You are onboarding a junior software engineer and explaining to them the purpose of the ${doc.metadata.source} file.
           Here is the code:
           ---
           ${code}
           ---
           Please provide a summary of the code above in no more than 100 words.`
-        ]);
-        return response.response.text() || `Code file: ${doc.metadata.source}`;
+        });
+        return response.text || `Code file: ${doc.metadata.source}`;
     } catch (error) {
         // console.error("Error generating content:", error);
         return `Code file: ${doc.metadata.source}`;
